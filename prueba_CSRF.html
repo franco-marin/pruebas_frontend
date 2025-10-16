@@ -3,6 +3,7 @@
 <head>
     </head>
 <body>
+    <h1>Hola</h1>
     <div class="container">
         <img id="csrf-payload" 
              src="TU_URL_DEL_LABORATORIO_PARA_LA_IMAGEN" 
@@ -11,27 +12,7 @@
         
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', (event) => {
-            // 1. Obtiene la referencia al elemento <img>
-            const imageElement = document.getElementById('csrf-payload');
-
-            // 2. Asigna una función al evento 'load'
-            imageElement.addEventListener('load', () => {
-                // ** ESTE CÓDIGO SE EJECUTA SI LA IMAGEN SE CARGA CON ÉXITO **
-                
-                // Opción A: Mostrar una notificación de éxito
-                alert('¡Éxito en el CSRF! La imagen autenticada se cargó.');
-                
-                // Opción B: Registrar el evento en la consola (más discreto)
-                console.log('✅ CSRF Exitoso: El recurso autenticado ha sido cargado por el navegador.');
-                
-                // Opción C: Si fuera un ataque real, podrías intentar redirigir
-                // window.location.href = "otra_pagina_segura.html"; 
-            });
-            
-            // Nota: El evento 'error' ya está en la etiqueta <img> (onerror)
-        });
-    </script>
+    
 </body>
+
 </html>
