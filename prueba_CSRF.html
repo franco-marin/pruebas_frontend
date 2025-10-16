@@ -93,8 +93,8 @@
         imageElement.addEventListener('load', () => {
             
             // ******* CAMBIO CLAVE: CAPTURA DE DIMENSIONES *******
-            const width = imageElement.naturalWidth; // Ancho real de la imagen
-            const height = imageElement.naturalHeight; // Alto real de la imagen
+            const width = imageElement.clientWidth; // Ancho del elemento en el DOM
+            const height = imageElement.clientHeight; // Alto del elemento en el DOM
             const area = width * height; // Producto de las dimensiones
             // ***************************************************
             
@@ -140,5 +140,6 @@
 </script>
 </body>
 </html>
+
 
 
